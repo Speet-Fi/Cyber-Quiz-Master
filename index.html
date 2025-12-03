@@ -1,0 +1,939 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Cyber Quiz Master - Проверка знаний по кибербезопасности</title>
+    <style>
+        :root {
+            --primary: #00ff9d;
+            --secondary: #00b8ff;
+            --danger: #ff5555;
+            --warning: #ffaa00;
+            --dark: #0a0e17;
+            --darker: #050811;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+        
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, var(--darker) 0%, var(--dark) 100%);
+            color: white;
+            min-height: 100vh;
+            padding: 20px;
+        }
+        
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+        }
+        
+        /* ХЕДЕР */
+        .header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: 20px 0;
+            border-bottom: 2px solid rgba(0, 255, 157, 0.3);
+            margin-bottom: 30px;
+        }
+        
+        .logo {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+        
+        .logo h1 {
+            color: var(--primary);
+            font-size: 2.2em;
+            text-shadow: 0 0 10px rgba(0, 255, 157, 0.5);
+        }
+        
+        .logo-icon {
+            font-size: 2.5em;
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { transform: scale(1); }
+            50% { transform: scale(1.1); }
+        }
+        
+        /* СТАТИСТИКА */
+        .stats-bar {
+            display: flex;
+            gap: 30px;
+            background: rgba(255, 255, 255, 0.05);
+            padding: 15px 25px;
+            border-radius: 10px;
+            margin-bottom: 25px;
+        }
+        
+        .stat-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+        }
+        
+        .stat-value {
+            font-size: 1.8em;
+            font-weight: bold;
+            color: var(--primary);
+        }
+        
+        .stat-label {
+            font-size: 0.9em;
+            opacity: 0.8;
+        }
+        
+        /* ВЫБОР УРОВНЯ */
+        .difficulty-selector {
+            margin-bottom: 30px;
+        }
+        
+        .difficulty-buttons {
+            display: flex;
+            gap: 15px;
+            margin-top: 15px;
+        }
+        
+        .dif-btn {
+            padding: 12px 25px;
+            background: rgba(255, 255, 255, 0.1);
+            border: 2px solid transparent;
+            border-radius: 8px;
+            color: white;
+            cursor: pointer;
+            transition: all 0.3s;
+            flex: 1;
+            text-align: center;
+        }
+        
+        .dif-btn:hover {
+            background: rgba(0, 255, 157, 0.1);
+            transform: translateY(-3px);
+        }
+        
+        .dif-btn.active {
+            background: rgba(0, 255, 157, 0.2);
+            border-color: var(--primary);
+            box-shadow: 0 0 15px rgba(0, 255, 157, 0.3);
+        }
+        
+        /* ОБЛАСТЬ ИГРЫ */
+        .game-area {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 30px;
+            margin-bottom: 30px;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .question-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 25px;
+        }
+        
+        .timer {
+            background: rgba(255, 85, 85, 0.2);
+            padding: 8px 20px;
+            border-radius: 20px;
+            font-weight: bold;
+            color: var(--danger);
+            border: 1px solid var(--danger);
+        }
+        
+        .question-text {
+            font-size: 1.5em;
+            line-height: 1.4;
+            margin-bottom: 30px;
+            color: #ffffff;
+            background: rgba(0, 0, 0, 0.3);
+            padding: 20px;
+            border-radius: 10px;
+            border-left: 5px solid var(--primary);
+        }
+        
+        /* ВАРИАНТЫ ОТВЕТОВ */
+        .options-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 15px;
+            margin-bottom: 25px;
+        }
+        
+        @media (max-width: 768px) {
+            .options-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+        
+        .option-btn {
+            padding: 20px;
+            background: rgba(255, 255, 255, 0.08);
+            border: 2px solid rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            color: white;
+            text-align: left;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1.1em;
+        }
+        
+        .option-btn:hover:not(:disabled) {
+            background: rgba(0, 255, 157, 0.15);
+            border-color: var(--primary);
+            transform: translateY(-3px);
+        }
+        
+        .option-btn.correct {
+            background: rgba(0, 255, 0, 0.2);
+            border-color: #00ff00;
+            animation: correctGlow 0.5s;
+        }
+        
+        .option-btn.wrong {
+            background: rgba(255, 0, 0, 0.2);
+            border-color: var(--danger);
+        }
+        
+        @keyframes correctGlow {
+            0% { box-shadow: 0 0 5px #00ff00; }
+            100% { box-shadow: 0 0 20px #00ff00; }
+        }
+        
+        /* КНОПКИ УПРАВЛЕНИЯ */
+        .controls {
+            display: flex;
+            gap: 15px;
+            justify-content: center;
+            margin-top: 20px;
+        }
+        
+        .control-btn {
+            padding: 15px 30px;
+            border: none;
+            border-radius: 8px;
+            font-weight: bold;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 1em;
+        }
+        
+        .primary-btn {
+            background: var(--primary);
+            color: var(--dark);
+        }
+        
+        .primary-btn:hover:not(:disabled) {
+            background: #00e68a;
+            transform: translateY(-2px);
+            box-shadow: 0 5px 15px rgba(0, 255, 157, 0.4);
+        }
+        
+        .secondary-btn {
+            background: rgba(0, 184, 255, 0.2);
+            color: var(--secondary);
+            border: 1px solid var(--secondary);
+        }
+        
+        .secondary-btn:hover {
+            background: rgba(0, 184, 255, 0.3);
+        }
+        
+        .control-btn:disabled {
+            opacity: 0.5;
+            cursor: not-allowed;
+        }
+        
+        /* ДОСТИЖЕНИЯ */
+        .achievements-panel {
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 15px;
+            padding: 25px;
+            margin-top: 30px;
+        }
+        
+        .achievements-title {
+            color: var(--warning);
+            margin-bottom: 20px;
+            display: flex;
+            align-items: center;
+            gap: 10px;
+        }
+        
+        .achievements-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+            gap: 15px;
+        }
+        
+        .achievement {
+            background: rgba(255, 255, 255, 0.07);
+            padding: 15px;
+            border-radius: 10px;
+            text-align: center;
+            transition: all 0.3s;
+        }
+        
+        .achievement.locked {
+            opacity: 0.5;
+            filter: grayscale(1);
+        }
+        
+        .achievement.unlocked {
+            background: rgba(255, 170, 0, 0.2);
+            border: 1px solid var(--warning);
+        }
+        
+        .achievement-icon {
+            font-size: 2em;
+            margin-bottom: 10px;
+        }
+        
+        /* РЕЗУЛЬТАТЫ */
+        .results-screen {
+            text-align: center;
+            padding: 40px 20px;
+        }
+        
+        .results-title {
+            font-size: 2.5em;
+            color: var(--primary);
+            margin-bottom: 20px;
+        }
+        
+        .results-score {
+            font-size: 5em;
+            font-weight: bold;
+            color: var(--primary);
+            text-shadow: 0 0 20px rgba(0, 255, 157, 0.5);
+            margin: 20px 0;
+        }
+        
+        .rank {
+            font-size: 1.5em;
+            color: var(--secondary);
+            margin-bottom: 30px;
+        }
+        
+        .xp-bar {
+            height: 20px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 10px;
+            margin: 30px 0;
+            overflow: hidden;
+        }
+        
+        .xp-fill {
+            height: 100%;
+            background: linear-gradient(90deg, var(--primary), var(--secondary));
+            border-radius: 10px;
+            transition: width 1s ease;
+        }
+        
+        .explanation {
+            background: rgba(255, 255, 255, 0.05);
+            padding: 20px;
+            border-radius: 10px;
+            margin-top: 20px;
+            text-align: left;
+            border-left: 4px solid var(--secondary);
+        }
+    </style>
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+</head>
+<body>
+    <div class="container">
+        <!-- ХЕДЕР -->
+        <div class="header">
+            <div class="logo">
+                <div class="logo-icon">🛡️</div>
+                <h1>Cyber Quiz Master</h1>
+            </div>
+            <div class="user-info">
+                <div class="level">Уровень: <span id="user-level">1</span></div>
+            </div>
+        </div>
+        
+        <!-- СТАТИСТИКА -->
+        <div class="stats-bar">
+            <div class="stat-item">
+                <div class="stat-value" id="current-score">0</div>
+                <div class="stat-label">Счёт</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="xp">0</div>
+                <div class="stat-label">Опыт</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="streak">0</div>
+                <div class="stat-label">Серия</div>
+            </div>
+            <div class="stat-item">
+                <div class="stat-value" id="questions-answered">0</div>
+                <div class="stat-label">Отвечено</div>
+            </div>
+        </div>
+        
+        <!-- ВЫБОР СЛОЖНОСТИ -->
+        <div class="difficulty-selector" id="difficulty-selector">
+            <h2><i class="fas fa-chart-line"></i> Выберите уровень сложности:</h2>
+            <div class="difficulty-buttons">
+                <button class="dif-btn active" data-level="easy" onclick="setDifficulty('easy')">
+                    <i class="fas fa-seedling"></i> Новичок
+                </button>
+                <button class="dif-btn" data-level="medium" onclick="setDifficulty('medium')">
+                    <i class="fas fa-user"></i> Специалист
+                </button>
+                <button class="dif-btn" data-level="hard" onclick="setDifficulty('hard')">
+                    <i class="fas fa-crown"></i> Эксперт
+                </button>
+            </div>
+        </div>
+        
+        <!-- ИГРОВАЯ ОБЛАСТЬ -->
+        <div class="game-area" id="game-area">
+            <div class="question-header">
+                <div class="category" id="category">Кибербезопасность</div>
+                <div class="timer" id="timer">30</div>
+            </div>
+            
+            <div class="question-text" id="question-text">
+                Загрузка вопроса...
+            </div>
+            
+            <div class="options-grid" id="options-container">
+                <!-- Варианты загрузятся через JS -->
+            </div>
+            
+            <div class="explanation" id="explanation" style="display:none;">
+                <strong><i class="fas fa-info-circle"></i> Объяснение:</strong> 
+                <span id="explanation-text"></span>
+            </div>
+            
+            <div class="controls">
+                <button class="control-btn primary-btn" id="next-btn" onclick="nextQuestion()" disabled>
+                    <i class="fas fa-forward"></i> Следующий вопрос
+                </button>
+                <button class="control-btn secondary-btn" id="hint-btn" onclick="useHint()">
+                    <i class="fas fa-lightbulb"></i> Подсказка (<span id="hints-left">3</span>)
+                </button>
+                <button class="control-btn secondary-btn" onclick="restartGame()">
+                    <i class="fas fa-redo"></i> Заново
+                </button>
+            </div>
+        </div>
+        
+        <!-- ДОСТИЖЕНИЯ -->
+        <div class="achievements-panel">
+            <h3 class="achievements-title"><i class="fas fa-trophy"></i> Достижения</h3>
+            <div class="achievements-grid" id="achievements-grid">
+                <!-- Достижения загрузятся через JS -->
+            </div>
+        </div>
+        
+        <!-- ЭКРАН РЕЗУЛЬТАТОВ (скрыт) -->
+        <div class="results-screen" id="results-screen" style="display:none;">
+            <h2 class="results-title">Результаты игры</h2>
+            <div class="results-score" id="final-score">0</div>
+            <div class="rank" id="rank-text">Новичок</div>
+            
+            <div class="xp-bar">
+                <div class="xp-fill" id="xp-fill" style="width: 0%"></div>
+            </div>
+            <div>Опыт: <span id="xp-earned">0</span> / 1000 до следующего уровня</div>
+            
+            <div class="controls" style="margin-top: 40px;">
+                <button class="control-btn primary-btn" onclick="restartGame()">
+                    <i class="fas fa-play"></i> Играть снова
+                </button>
+                <button class="control-btn secondary-btn" onclick="showGame()">
+                    <i class="fas fa-list"></i> К вопросам
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // БАЗА ВОПРОСОВ ПО КИБЕРБЕЗОПАСНОСТИ
+        const questionDatabase = {
+            easy: [
+                {
+                    question: "Что такое фишинг?",
+                    options: [
+                        "Вид рыбалки",
+                        "Мошенничество с поддельными письмами",
+                        "Сканирование портов",
+                        "Взлом паролей"
+                    ],
+                    correct: 1,
+                    explanation: "Фишинг - рассылка поддельных писем для получения конфиденциальной информации.",
+                    category: "Атаки"
+                },
+                {
+                    question: "Как называется защитная стена между сетями?",
+                    options: [
+                        "Антивирус",
+                        "Фаервол",
+                        "VPN",
+                        "Прокси"
+                    ],
+                    correct: 1,
+                    explanation: "Фаервол (брандмауэр) контролирует сетевой трафик между сетями.",
+                    category: "Защита"
+                },
+                {
+                    question: "Что означает аббревиатура DDoS?",
+                    options: [
+                        "Digital Defense Online System",
+                        "Distributed Denial of Service",
+                        "Data Destruction Operation System",
+                        "Direct Download Server"
+                    ],
+                    correct: 1,
+                    explanation: "DDoS - распределённая атака на отказ в обслуживании.",
+                    category: "Атаки"
+                }
+            ],
+            medium: [
+                {
+                    question: "Какой протокол используется для безопасного просмотра веб-страниц?",
+                    options: [
+                        "HTTP",
+                        "FTP",
+                        "HTTPS",
+                        "SMTP"
+                    ],
+                    correct: 2,
+                    explanation: "HTTPS использует SSL/TLS шифрование для защиты данных.",
+                    category: "Протоколы"
+                },
+                {
+                    question: "Что проверяет сканер уязвимостей?",
+                    options: [
+                        "Скорость интернета",
+                        "Наличие антивируса",
+                        "Слабые места в безопасности",
+                        "Качество связи"
+                    ],
+                    correct: 2,
+                    explanation: "Сканеры ищут известные уязвимости в системах.",
+                    category: "Инструменты"
+                },
+                {
+                    question: "Что такое двухфакторная аутентификация (2FA)?",
+                    options: [
+                        "Два пароля",
+                        "Пароль + отпечаток пальца",
+                        "Два логина",
+                        "Пароль + код из SMS"
+                    ],
+                    correct: 3,
+                    explanation: "2FA добавляет второй фактор (например, код из SMS) к паролю.",
+                    category: "Аутентификация"
+                }
+            ],
+            hard: [
+                {
+                    question: "Какой алгоритм используется в Bitcoin для proof-of-work?",
+                    options: [
+                        "SHA-256",
+                        "MD5",
+                        "AES",
+                        "RSA"
+                    ],
+                    correct: 0,
+                    explanation: "Bitcoin использует SHA-256 для майнинга.",
+                    category: "Криптография"
+                },
+                {
+                    question: "Что такое SQL-инъекция?",
+                    options: [
+                        "Внедрение вируса в базу данных",
+                        "Кража SQL-сервера",
+                        "Внедрение SQL-кода через поля ввода",
+                        "Шифрование SQL-запросов"
+                    ],
+                    correct: 2,
+                    explanation: "SQL-инъекция позволяет выполнить произвольные SQL-команды.",
+                    category: "Уязвимости"
+                },
+                {
+                    question: "Какой порт используется по умолчанию для SSH?",
+                    options: [
+                        "22",
+                        "80",
+                        "443",
+                        "21"
+                    ],
+                    correct: 0,
+                    explanation: "SSH использует TCP-порт 22 по умолчанию.",
+                    category: "Сети"
+                }
+            ]
+        };
+
+        // СИСТЕМА ДОСТИЖЕНИЙ
+        const achievements = [
+            { id: 'first_blood', name: 'Первая кровь', desc: 'Ответить на первый вопрос', icon: '🩸', unlocked: false },
+            { id: 'streak_5', name: 'Неудержимый', desc: '5 правильных ответов подряд', icon: '🔥', unlocked: false },
+            { id: 'perfection', name: 'Совершенство', desc: '10/10 правильных ответов', icon: '💯', unlocked: false },
+            { id: 'speedy', name: 'Скорострел', desc: 'Ответить за 5 секунд', icon: '⚡', unlocked: false },
+            { id: 'expert', name: 'Эксперт', desc: 'Пройдите сложный уровень', icon: '👨‍💻', unlocked: false },
+            { id: 'hacker', name: 'Хакер', desc: '1000 очков в одной игре', icon: '🖥️', unlocked: false }
+        ];
+
+        // ИГРОВЫЕ ПЕРЕМЕННЫЕ
+        let gameState = {
+            score: 0,
+            xp: 0,
+            level: 1,
+            streak: 0,
+            questionsAnswered: 0,
+            currentDifficulty: 'easy',
+            currentQuestion: null,
+            timer: 30,
+            timerInterval: null,
+            hintsLeft: 3,
+            gameActive: true,
+            achievementsUnlocked: []
+        };
+
+        // ИНИЦИАЛИЗАЦИЯ
+        document.addEventListener('DOMContentLoaded', () => {
+            loadAchievements();
+            startNewGame();
+        });
+
+        // НАЧАТЬ НОВУЮ ИГРУ
+        function startNewGame() {
+            gameState.score = 0;
+            gameState.streak = 0;
+            gameState.questionsAnswered = 0;
+            gameState.hintsLeft = 3;
+            gameState.gameActive = true;
+            
+            updateStats();
+            loadQuestion();
+            startTimer();
+            showGame();
+        }
+
+        // ЗАГРУЗИТЬ ВОПРОС
+        function loadQuestion() {
+            const questions = questionDatabase[gameState.currentDifficulty];
+            gameState.currentQuestion = questions[Math.floor(Math.random() * questions.length)];
+            
+            document.getElementById('question-text').textContent = gameState.currentQuestion.question;
+            document.getElementById('category').textContent = gameState.currentQuestion.category;
+            
+            const optionsContainer = document.getElementById('options-container');
+            optionsContainer.innerHTML = '';
+            
+            gameState.currentQuestion.options.forEach((option, index) => {
+                const button = document.createElement('button');
+                button.className = 'option-btn';
+                button.textContent = option;
+                button.onclick = () => checkAnswer(index);
+                optionsContainer.appendChild(button);
+            });
+            
+            document.getElementById('next-btn').disabled = true;
+            document.getElementById('explanation').style.display = 'none';
+            resetTimer();
+        }
+
+        // ПРОВЕРИТЬ ОТВЕТ
+        function checkAnswer(selectedIndex) {
+            if (!gameState.gameActive) return;
+            
+            gameState.gameActive = false;
+            clearInterval(gameState.timerInterval);
+            
+            const correctIndex = gameState.currentQuestion.correct;
+            const options = document.querySelectorAll('.option-btn');
+            const isCorrect = selectedIndex === correctIndex;
+            
+            // Подсветка ответов
+            options.forEach((btn, index) => {
+                btn.disabled = true;
+                if (index === correctIndex) {
+                    btn.classList.add('correct');
+                } else if (index === selectedIndex && !isCorrect) {
+                    btn.classList.add('wrong');
+                }
+            });
+            
+            // Обновление статистики
+            if (isCorrect) {
+                const timeBonus = Math.max(10, gameState.timer * 2);
+                const streakBonus = gameState.streak * 10;
+                const points = 100 + timeBonus + streakBonus;
+                
+                gameState.score += points;
+                gameState.streak++;
+                gameState.xp += 50;
+                
+                // Проверка достижений
+                if (gameState.streak === 5) unlockAchievement('streak_5');
+                if (gameState.timer > 25) unlockAchievement('speedy');
+            } else {
+                gameState.streak = 0;
+            }
+            
+            gameState.questionsAnswered++;
+            
+            // Первое достижение
+            if (gameState.questionsAnswered === 1) unlockAchievement('first_blood');
+            
+            updateStats();
+            
+            // Показать объяснение
+            document.getElementById('explanation-text').textContent = gameState.currentQuestion.explanation;
+            document.getElementById('explanation').style.display = 'block';
+            
+            document.getElementById('next-btn').disabled = false;
+            
+            // Конец игры?
+            if (gameState.questionsAnswered >= 10) {
+                setTimeout(endGame, 1500);
+            }
+        }
+
+        // СЛЕДУЮЩИЙ ВОПРОС
+        function nextQuestion() {
+            if (gameState.questionsAnswered >= 10) {
+                endGame();
+                return;
+            }
+            
+            gameState.gameActive = true;
+            loadQuestion();
+            startTimer();
+        }
+
+        // ТАЙМЕР
+        function startTimer() {
+            resetTimer();
+            gameState.timerInterval = setInterval(() => {
+                gameState.timer--;
+                document.getElementById('timer').textContent = gameState.timer;
+                
+                if (gameState.timer <= 0) {
+                    clearInterval(gameState.timerInterval);
+                    timeOut();
+                }
+            }, 1000);
+        }
+
+        function resetTimer() {
+            gameState.timer = 30;
+            document.getElementById('timer').textContent = gameState.timer;
+            clearInterval(gameState.timerInterval);
+        }
+
+        function timeOut() {
+            gameState.gameActive = false;
+            const options = document.querySelectorAll('.option-btn');
+            const correctIndex = gameState.currentQuestion.correct;
+            
+            options.forEach((btn, index) => {
+                btn.disabled = true;
+                if (index === correctIndex) {
+                    btn.classList.add('correct');
+                }
+            });
+            
+            document.getElementById('next-btn').disabled = false;
+            gameState.streak = 0;
+        }
+
+        // ИСПОЛЬЗОВАТЬ ПОДСКАЗКУ
+        function useHint() {
+            if (gameState.hintsLeft <= 0 || !gameState.gameActive) return;
+            
+            gameState.hintsLeft--;
+            document.getElementById('hints-left').textContent = gameState.hintsLeft;
+            
+            // Удалить два неверных варианта
+            const options = document.querySelectorAll('.option-btn');
+            const correctIndex = gameState.currentQuestion.correct;
+            let removed = 0;
+            
+            for (let i = 0; i < options.length && removed < 2; i++) {
+                if (i !== correctIndex && !options[i].classList.contains('wrong')) {
+                    options[i].style.opacity = '0.3';
+                    options[i].style.pointerEvents = 'none';
+                    removed++;
+                }
+            }
+        }
+
+        // УСТАНОВИТЬ СЛОЖНОСТЬ
+        function setDifficulty(level) {
+            gameState.currentDifficulty = level;
+            
+            // Обновить активную кнопку
+            document.querySelectorAll('.dif-btn').forEach(btn => {
+                btn.classList.remove('active');
+            });
+            document.querySelector(`[data-level="${level}"]`).classList.add('active');
+            
+            // Разблокировать достижение
+            if (level === 'hard') unlockAchievement('expert');
+            
+            startNewGame();
+        }
+
+        // ОБНОВИТЬ СТАТИСТИКУ
+        function updateStats() {
+            document.getElementById('current-score').textContent = gameState.score;
+            document.getElementById('xp').textContent = gameState.xp;
+            document.getElementById('streak').textContent = gameState.streak;
+            document.getElementById('questions-answered').textContent = gameState.questionsAnswered;
+            document.getElementById('user-level').textContent = gameState.level;
+            
+            // Проверка уровня
+            if (gameState.xp >= gameState.level * 1000) {
+                gameState.level++;
+                alert(`🎉 Поздравляем! Вы достигли уровня ${gameState.level}!`);
+            }
+        }
+
+        // КОНЕЦ ИГРЫ
+        function endGame() {
+            clearInterval(gameState.timerInterval);
+            
+            // Достижение за идеальный результат
+            if (gameState.score >= 1000) unlockAchievement('hacker');
+            if (gameState.questionsAnswered === 10 && gameState.score >= 1000) unlockAchievement('perfection');
+            
+            document.getElementById('final-score').textContent = gameState.score;
+            
+            // Определить ранг
+            let rank = 'Новичок';
+            if (gameState.score >= 800) rank = 'Специалист';
+            if (gameState.score >= 1200) rank = 'Эксперт';
+            if (gameState.score >= 1500) rank = 'Мастер кибербезопасности';
+            
+            document.getElementById('rank-text').textContent = rank;
+            document.getElementById('xp-earned').textContent = gameState.xp;
+            
+            // Анимация прогресс-бара
+            const xpPercent = (gameState.xp % 1000) / 10;
+            setTimeout(() => {
+                document.getElementById('xp-fill').style.width = `${xpPercent}%`;
+            }, 500);
+            
+            showResults();
+        }
+
+        // ЗАГРУЗИТЬ ДОСТИЖЕНИЯ
+        function loadAchievements() {
+            const grid = document.getElementById('achievements-grid');
+            grid.innerHTML = '';
+            
+            achievements.forEach(ach => {
+                const div = document.createElement('div');
+                div.className = `achievement ${ach.unlocked ? 'unlocked' : 'locked'}`;
+                div.innerHTML = `
+                    <div class="achievement-icon">${ach.icon}</div>
+                    <div class="achievement-name">${ach.name}</div>
+                    <div class="achievement-desc">${ach.desc}</div>
+                `;
+                grid.appendChild(div);
+            });
+        }
+
+        // РАЗБЛОКИРОВАТЬ ДОСТИЖЕНИЕ
+        function unlockAchievement(id) {
+            const achievement = achievements.find(a => a.id === id);
+            if (!achievement || achievement.unlocked) return;
+            
+            achievement.unlocked = true;
+            gameState.achievementsUnlocked.push(id);
+            
+            // Показать уведомление
+            showNotification(`Достижение разблокировано: ${achievement.name}`);
+            
+            // Обновить отображение
+            loadAchievements();
+        }
+
+        function showNotification(text) {
+            const notification = document.createElement('div');
+            notification.style.cssText = `
+                position: fixed;
+                top: 20px;
+                right: 20px;
+                background: linear-gradient(135deg, #ffaa00, #ff5500);
+                color: white;
+                padding: 15px 25px;
+                border-radius: 10px;
+                z-index: 1000;
+                animation: slideIn 0.5s, fadeOut 0.5s 2.5s;
+                box-shadow: 0 5px 15px rgba(255, 170, 0, 0.5);
+            `;
+            
+            notification.innerHTML = `
+                <div style="display: flex; align-items: center; gap: 10px;">
+                    <i class="fas fa-trophy" style="font-size: 1.5em;"></i>
+                    <div>
+                        <strong>${text}</strong>
+                        <div style="font-size: 0.9em; opacity: 0.9;">Поздравляем!</div>
+                    </div>
+                </div>
+            `;
+            
+            document.body.appendChild(notification);
+            
+            // Удалить уведомление через 3 секунды
+            setTimeout(() => {
+                if (notification.parentNode) {
+                    notification.parentNode.removeChild(notification);
+                }
+            }, 3000);
+        }
+
+        // ПЕРЕЗАПУСТИТЬ ИГРУ
+        function restartGame() {
+            clearInterval(gameState.timerInterval);
+            startNewGame();
+        }
+
+        // ПЕКЛЮЧЕНИЕ МЕЖДУ ЭКРАНАМИ
+        function showGame() {
+            document.getElementById('game-area').style.display = 'block';
+            document.getElementById('results-screen').style.display = 'none';
+        }
+
+        function showResults() {
+            document.getElementById('game-area').style.display = 'none';
+            document.getElementById('results-screen').style.display = 'block';
+        }
+
+        // Добавить CSS для анимаций уведомлений
+        const style = document.createElement('style');
+        style.textContent = `
+            @keyframes slideIn {
+                from { transform: translateX(100%); opacity: 0; }
+                to { transform: translateX(0); opacity: 1; }
+            }
+            @keyframes fadeOut {
+                from { opacity: 1; }
+                to { opacity: 0; }
+            }
+        `;
+        document.head.appendChild(style);
+    </script>
+</body>
+</html>
