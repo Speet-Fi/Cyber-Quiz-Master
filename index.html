@@ -1148,12 +1148,12 @@
             { id: 'streak_5', name: 'Неудержимый', desc: '5 правильных ответов подряд', icon: '🔥', unlocked: false },
             { id: 'perfection', name: 'Совершенство', desc: '10/10 правильных ответов', icon: '💯', unlocked: false },
             { id: 'speedy', name: 'Скорострел', desc: 'Ответить быстро (менее 5 секунд)', icon: '⚡', unlocked: false },
-            { id: 'expert', name: 'Эксперт', desc: 'Завершить 10 вопросов на уровне Эксперт', icon: '👨‍💻', unlocked: false },
-            { id: 'hacker', name: 'Хакер', desc: '1000 очков в одной игре', icon: '🖥️', unlocked: false },
+            { id: 'expert', name: 'Эксперт', desc: 'Пройти уровень "Эксперт"', icon: '👨‍💻', unlocked: false },
+            { id: 'hacker', name: 'Хакер', desc: '2000 очков', icon: '🖥️', unlocked: false },
             { id: 'regular_player', name: 'Регулярный игрок', desc: 'Пройдите 3 игры подряд на разных сложностях', icon: '🎮', unlocked: false },
             { id: 'relied_on_hints', name: 'Полагался на подсказки', desc: 'Использовать все подсказки в одной игре', icon: '💡', unlocked: false },
             { id: 'perfect_hard', name: 'Тяжёлый идеал', desc: '10/10 правильных ответов на уровне Эксперт', icon: '👑', unlocked: false },
-            { id: 'timeout_master', name: 'Спешил', desc: 'Потерять игру из-за истечения времени', icon: '⏰', unlocked: false }
+            { id: 'timeout_master', name: 'Улиточка', desc: 'Потерять игру из-за истечения времени', icon: '⏰', unlocked: false }
         ];
 
         // ИГРОВЫЕ ПЕРЕМЕННЫЕ
@@ -1643,8 +1643,8 @@
             clearInterval(gameState.timerInterval);
             
             // Достижение за идеальный результат
-            if (gameState.score >= 1000) unlockAchievement('hacker');
-            if (gameState.questionsAnswered === 10 && gameState.score >= 1000) unlockAchievement('perfection');
+            if (gameState.score >= 2000) unlockAchievement('hacker');
+            if (gameState.questionsAnswered === 10 && gameState.correctAnswers === 10) unlockAchievement('perfection');
 
             // Достижение: использовал все подсказки в игре (переименовано)
             const hintCounts = { 'easy': 3, 'medium': 2, 'hard': 1 };
@@ -1723,6 +1723,14 @@
         function getAchievementProgress(id) {
             // Return { value, max }
             const hintCounts = { 'easy': 3, 'medium': 2, 'hard': 1 };
+            const achievement = achievements.find(a => a.id === id);
+            
+            // Если достижение уже разблокировано, показываем 100% прогресс
+            if (achievement && achievement.unlocked) {
+                return { value: 1, max: 1 };
+            }
+            
+            // Иначе показываем текущий прогресс в этой игре
             switch (id) {
                 case 'first_blood':
                     return { value: Math.min(gameState.questionsAnswered, 1), max: 1 };
@@ -1735,7 +1743,7 @@
                 case 'expert':
                     return { value: gameState.currentDifficulty === 'hard' ? Math.min(gameState.questionsAnswered, 10) : 0, max: 10 };
                 case 'hacker':
-                    return { value: Math.min(gameState.score, 1000), max: 1000 };
+                    return { value: Math.min(gameState.score, 2000), max: 2000 };
                 case 'regular_player':
                     return { value: new Set(gameState.recentGames).size, max: 3 };
                 case 'relied_on_hints':
