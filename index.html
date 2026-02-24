@@ -1207,46 +1207,8 @@
             gameState.usedQuestions = [];
             gameState.gameActive = true;
             gameState.currentQuestionIndex = -1;
-        }
-
-        function loadPersistentState() {
-            try {
-                const raw = localStorage.getItem(STORAGE_KEY);
-                if (!raw) return;
-                const saved = JSON.parse(raw);
-                // Restore unlocked achievements (sanitize incoming ids)
-                if (Array.isArray(saved.achievementsUnlocked)) {
-                    const validIds = new Set(achievements.map(a => a.id));
-                    const sanitized = saved.achievementsUnlocked.filter(id => validIds.has(id));
-                    gameState.achievementsUnlocked = Array.from(new Set(sanitized));
-                    // Reset all achievements then mark persisted ones
-                    achievements.forEach(a => a.unlocked = false);
-                    gameState.achievementsUnlocked.forEach(id => {
-                        const ach = achievements.find(a => a.id === id);
-                        if (ach) ach.unlocked = true;
-                    });
-                }
-                // Restore counters
-                if (typeof saved.gamesPlayed === 'number') gameState.gamesPlayed = saved.gamesPlayed;
-                if (saved.gamesByDifficulty) gameState.gamesByDifficulty = saved.gamesByDifficulty;
-                if (Array.isArray(saved.recentGames)) gameState.recentGames = saved.recentGames.slice();
-            } catch (e) {
-                console.warn('Failed to load persistent state', e);
-            }
-        }
-
-        function savePersistentState() {
-            try {
-                const toSave = {
-                    achievementsUnlocked: gameState.achievementsUnlocked,
-                    gamesPlayed: gameState.gamesPlayed,
-                    gamesByDifficulty: gameState.gamesByDifficulty,
-                    recentGames: gameState.recentGames
-                };
-                localStorage.setItem(STORAGE_KEY, JSON.stringify(toSave));
-            } catch (e) {
-                console.warn('Failed to save persistent state', e);
-            }
+            gameState.achievementsUnlocked = [];
+            achievements.forEach(a => a.unlocked = false);
         }
 
         // ОТКРЫТЬ/ЗАКРЫТЬ ВВОДНУЮ ИНСТРУКЦИЮ
@@ -1688,9 +1650,6 @@
                 unlockAchievement('regular_player');
             }
 
-            // Сохранить persistent state
-            savePersistentState();
-            
             // Обновить прогресс-бары достижений в реальном времени
             loadAchievements();
             
@@ -1719,20 +1678,30 @@
             const grid = document.getElementById('achievements-grid');
             grid.innerHTML = '';
             
-            // Ensure achievements array reflects persistent unlocks
+            // Рендерим все достижения
             achievements.forEach(ach => {
-                ach.unlocked = gameState.achievementsUnlocked.includes(ach.id) || false;
                 const div = document.createElement('div');
                 div.className = `achievement ${ach.unlocked ? 'unlocked' : 'locked'}`;
-                const progress = getAchievementProgress(ach.id);
-                const percent = Math.round((progress.value / progress.max) * 100);
-                div.innerHTML = `
-                    <div class="achievement-icon">${ach.icon}</div>
-                    <div class="achievement-name">${ach.name}</div>
-                    <div class="achievement-desc">${ach.desc}</div>
-                    <div class="achievement-progress"><div class="achievement-progress-fill" style="width: ${percent}%;"></div></div>
-                    <div style="font-size:0.8em; opacity:0.85; margin-top:6px;">${progress.value}/${progress.max}</div>
-                `;
+                
+                if (ach.unlocked) {
+                    // Если разблокировано - без прогресс-бара
+                    div.innerHTML = `
+                        <div class="achievement-icon">${ach.icon}</div>
+                        <div class="achievement-name">${ach.name}</div>
+                        <div class="achievement-desc">${ach.desc}</div>
+                    `;
+                } else {
+                    // Не разблокировано - с прогресс-баром
+                    const progress = getAchievementProgress(ach.id);
+                    const percent = Math.round((progress.value / progress.max) * 100);
+                    div.innerHTML = `
+                        <div class="achievement-icon">${ach.icon}</div>
+                        <div class="achievement-name">${ach.name}</div>
+                        <div class="achievement-desc">${ach.desc}</div>
+                        <div class="achievement-progress"><div class="achievement-progress-fill" style="width: ${percent}%;"></div></div>
+                        <div style="font-size:0.8em; opacity:0.85; margin-top:6px;">${progress.value}/${progress.max}</div>
+                    `;
+                }
                 grid.appendChild(div);
             });
         }
@@ -1781,9 +1750,6 @@
             
             achievement.unlocked = true;
             if (!gameState.achievementsUnlocked.includes(id)) gameState.achievementsUnlocked.push(id);
-            
-            // Сохранить persistent состояние
-            savePersistentState();
             
             // Показать уведомление
             showNotification(`Достижение разблокировано: ${achievement.name}`);
