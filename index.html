@@ -1184,14 +1184,30 @@
 
         // ИНИЦИАЛИЗАЦИЯ
         document.addEventListener('DOMContentLoaded', () => {
+            resetGameProgress();
             loadPersistentState();
             loadAchievements();
+            updateStats();
             // Показать вводную инструкцию перед началом игры
             openIntroModal();
         });
 
         // Сохранить/загрузить состояние в localStorage
         const STORAGE_KEY = 'cyber_quiz_state_v1';
+
+        // Сбросить временный прогресс текущей игры
+        function resetGameProgress() {
+            gameState.score = 0;
+            gameState.xp = 0;
+            gameState.streak = 0;
+            gameState.questionsAnswered = 0;
+            gameState.correctAnswers = 0;
+            gameState.hintsUsed = 0;
+            gameState.fastAnswers = 0;
+            gameState.usedQuestions = [];
+            gameState.gameActive = true;
+            gameState.currentQuestionIndex = -1;
+        }
 
         function loadPersistentState() {
             try {
@@ -1246,6 +1262,7 @@
         function startFromIntro() {
             // Закрыть модал, затем начать новую игру
             closeIntroModal();
+            resetGameProgress();
             // Установить текущие показатели подсказок на UI
             const hintCounts = { 'easy': 3, 'medium': 2, 'hard': 1 };
             gameState.hintsLeft = hintCounts[gameState.currentDifficulty] || 3;
